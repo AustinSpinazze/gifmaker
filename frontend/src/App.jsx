@@ -11,6 +11,7 @@ function App() {
 	const [ready, setReady] = useState(false);
 	const [video, setVideo] = useState();
 	const [gif, setGif] = useState();
+	const [deviceType, setDeviceType] = useState();
 
 	const load = async () => {
 		await ffmpeg.load();
@@ -45,37 +46,63 @@ function App() {
 	};
 
 	useEffect(() => {
-		load();
+		const devices = navigator.mediaDevices
+			.enumerateDevices()
+			.then((devices) => {
+				let deviceArray = [];
+				devices.forEach((device) => {
+					if (device.kind === 'videoinput') {
+						deviceArray.push(device.kind);
+					}
+				});
+				return deviceArray;
+			});
+		if (devices.length > 1) {
+			setDeviceType('mobile');
+		} else {
+			load();
+		}
 	}, []);
 
 	return ready ? (
-		<div className='App'>
-			{video && (
-				<video controls width='250' src={URL.createObjectURL(video)} />
-			)}
-			<input
-				type='file'
-				onChange={(e) => setVideo(e.target.files?.item(0))}
-			/>
-			<h3>Result</h3>
-			<button onClick={convertToGif}>Convert</button>
-			{gif && (
-				<div>
-					<img src={gif} />
-					<button
-						onClick={() => {
-							const a = document.createElement('a');
-							a.href = gif;
-							let filename = Date.now();
-							a.download = `${filename}.gif`;
-							a.click();
-						}}
-					>
-						Download
-					</button>
-				</div>
-			)}
-		</div>
+		deviceType !== 'mobile' ? (
+			<div className='App'>
+				{video && (
+					<video
+						controls
+						width='250'
+						src={URL.createObjectURL(video)}
+					/>
+				)}
+				<input
+					type='file'
+					onChange={(e) => setVideo(e.target.files?.item(0))}
+				/>
+				<h3>Result</h3>
+				<button onClick={convertToGif}>Convert</button>
+				{gif && (
+					<div>
+						<img src={gif} />
+						<button
+							onClick={() => {
+								const a = document.createElement('a');
+								a.href = gif;
+								let filename = Date.now();
+								a.download = `${filename}.gif`;
+								a.click();
+							}}
+						>
+							Download
+						</button>
+					</div>
+				)}
+			</div>
+		) : (
+			<p>
+				Unfortunately this app currently does not support mobile devices
+				😭
+			</p>
+		)
 	) : (
 		<p>Loading...</p>
 	);
