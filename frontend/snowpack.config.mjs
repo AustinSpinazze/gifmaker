@@ -20,6 +20,6 @@ export default {
     /* ... */
   },
   buildOptions: {
-    /* ... */
+    out: "../backend/build"
   },
 };
